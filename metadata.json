@@ -1,0 +1,6 @@
+{
+  "name": "TrophyOps",
+  "description": "An online store & operations management system for trophy and momento B2B customization business with role-based dashboards, inventory, packing control, and payment tracking.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
