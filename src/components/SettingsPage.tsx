@@ -106,6 +106,7 @@ export default function SettingsPage({
       id: generateId('u-'),
       name: newUserName,
       email: newUserEmail,
+      password: 'password123',
       role: newUserRole,
       is_active: true,
     };
