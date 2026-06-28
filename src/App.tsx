@@ -38,6 +38,7 @@ import ClientsPage from './components/ClientsPage';
 import InvoicePage from './components/InvoicePage';
 import ReportsPage from './components/ReportsPage';
 import SettingsPage from './components/SettingsPage';
+import LoginPage from './components/LoginPage';
 
 // Icons for navigation sidebar
 import {
@@ -70,18 +71,24 @@ export default function App() {
   const currentUser = db.currentUser;
 
   // Handlers
-  const handleRoleChange = (userId: string) => {
-    const targetUser = db.users.find(u => u.id === userId);
-    if (targetUser) {
-      setDb(prev => ({
-        ...prev,
-        currentUser: targetUser,
-      }));
-      // Reset navigation context on role switch to avoid showing restricted screens
-      setActiveTab('dashboard');
-      setSelectedOrderId(null);
-      setSelectedInvoiceId(null);
-    }
+  const handleLogin = (user: User) => {
+    setDb(prev => ({
+      ...prev,
+      currentUser: user,
+    }));
+    setActiveTab('dashboard');
+    setSelectedOrderId(null);
+    setSelectedInvoiceId(null);
+  };
+
+  const handleLogout = () => {
+    setDb(prev => ({
+      ...prev,
+      currentUser: null,
+    }));
+    setActiveTab('dashboard');
+    setSelectedOrderId(null);
+    setSelectedInvoiceId(null);
   };
 
   const handleMarkNotificationRead = (notifId: string) => {
@@ -92,6 +99,7 @@ export default function App() {
   };
 
   const handleClearNotifications = () => {
+    if (!currentUser) return;
     setDb(prev => ({
       ...prev,
       notifications: prev.notifications.filter(n => n.recipient_role !== currentUser.role && n.recipient_role !== 'all'),
@@ -140,7 +148,7 @@ export default function App() {
       'None',
       'received',
       `Order ${newOrder.order_number} submitted. Waiting for Store inventory stock verification.`,
-      currentUser.name
+      currentUser?.name || 'System'
     );
 
     // 3. Dispatch automated real-time notification to Store
@@ -179,7 +187,7 @@ export default function App() {
       prevStatus,
       updatedOrder.status,
       logMsg,
-      currentUser.name
+      currentUser?.name || 'System'
     );
 
     // 4. Handle auto updates like updating inventory stocks when production completes
@@ -197,7 +205,9 @@ export default function App() {
     }
 
     // 5. Trigger notifications depending on new status
-    updatedDb = handleStatusNotificationTrigger(updatedDb, updatedOrder, prevStatus, currentUser);
+    if (currentUser) {
+      updatedDb = handleStatusNotificationTrigger(updatedDb, updatedOrder, prevStatus, currentUser);
+    }
 
     setDb(updatedDb);
   };
@@ -225,7 +235,7 @@ export default function App() {
       id: invoiceId,
       invoice_number: invoiceNumber,
       order_id: orderId,
-      generated_by: currentUser.name,
+      generated_by: currentUser?.name || 'System',
       subtotal,
       discount_amount: 0,
       gst_percent: gstPercent,
@@ -245,7 +255,7 @@ export default function App() {
       order.status,
       order.status,
       `B2B tax Invoice ${invoice.invoice_number} auto-generated for amount ₹${totalAmount.toLocaleString('en-IN')}`,
-      currentUser.name
+      currentUser?.name || 'System'
     );
 
     setDb(updatedDb);
@@ -286,6 +296,7 @@ export default function App() {
 
   // Tab View Permissions Checker (Department Isolation)
   const isTabAccessible = (tab: string) => {
+    if (!currentUser) return false;
     if (currentUser.role === 'admin') return true;
 
     switch (tab) {
@@ -323,13 +334,16 @@ export default function App() {
     { id: 'settings', label: 'System Settings', icon: SettingsIcon, restrict: ['admin'] },
   ];
 
+  if (!currentUser) {
+    return <LoginPage users={db.users} onLogin={handleLogin} />;
+  }
+
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col font-sans">
       {/* 1. Global Header with Role selector */}
       <RoleSelector
         currentUser={currentUser}
-        users={db.users}
-        onRoleChange={handleRoleChange}
+        onLogout={handleLogout}
         notifications={db.notifications}
         onMarkRead={handleMarkNotificationRead}
         onClearAll={handleClearNotifications}

@@ -29,7 +29,7 @@ interface DBState {
   payments: Payment[];
   notifications: Notification[];
   businessInfo: BusinessInfo;
-  currentUser: User;
+  currentUser: User | null;
 }
 
 const STORAGE_KEY = 'trophy_ops_db';
@@ -52,12 +52,12 @@ export function generateInvoiceNumber(): string {
 }
 
 const DEFAULT_USERS: User[] = [
-  { id: 'u-1', name: 'Vance Admin', email: 'admin@trophyops.com', role: 'admin', is_active: true },
-  { id: 'u-2', name: 'John Sales', email: 'sales@trophyops.com', role: 'sales', is_active: true },
-  { id: 'u-3', name: 'Sarah Store', email: 'store@trophyops.com', role: 'store', is_active: true },
-  { id: 'u-4', name: 'Mike Prod', email: 'production@trophyops.com', role: 'production', is_active: true },
-  { id: 'u-5', name: 'Emily Design', email: 'design@trophyops.com', role: 'design', is_active: true },
-  { id: 'u-6', name: 'David Pack', email: 'packing@trophyops.com', role: 'packing', is_active: true },
+  { id: 'u-1', name: 'Vance Admin', email: 'admin@trophyops.com', password: 'password123', role: 'admin', is_active: true },
+  { id: 'u-2', name: 'John Sales', email: 'sales@trophyops.com', password: 'password123', role: 'sales', is_active: true },
+  { id: 'u-3', name: 'Sarah Store', email: 'store@trophyops.com', password: 'password123', role: 'store', is_active: true },
+  { id: 'u-4', name: 'Mike Prod', email: 'production@trophyops.com', password: 'password123', role: 'production', is_active: true },
+  { id: 'u-5', name: 'Emily Design', email: 'design@trophyops.com', password: 'password123', role: 'design', is_active: true },
+  { id: 'u-6', name: 'David Pack', email: 'packing@trophyops.com', password: 'password123', role: 'packing', is_active: true },
 ];
 
 const DEFAULT_ARTICLES: Article[] = [
@@ -437,7 +437,7 @@ function createInitialDB(): DBState {
     payments,
     notifications,
     businessInfo: DEFAULT_BUSINESS_INFO,
-    currentUser: DEFAULT_USERS[0], // default Vance Admin
+    currentUser: null, // Start logged out
   };
 }
 

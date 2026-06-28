@@ -9,8 +9,7 @@ import { Bell, UserCheck, Shield, ChevronDown, Check, Trash } from 'lucide-react
 
 interface RoleSelectorProps {
   currentUser: User;
-  users: User[];
-  onRoleChange: (userId: string) => void;
+  onLogout: () => void;
   notifications: Notification[];
   onMarkRead: (id: string) => void;
   onClearAll: () => void;
@@ -19,14 +18,12 @@ interface RoleSelectorProps {
 
 export default function RoleSelector({
   currentUser,
-  users,
-  onRoleChange,
+  onLogout,
   notifications,
   onMarkRead,
   onClearAll,
   onNavigateToOrder,
 }: RoleSelectorProps) {
-  const [showRoles, setShowRoles] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
 
   // Filter notifications relevant to current role
@@ -54,45 +51,20 @@ export default function RoleSelector({
       <div className="flex items-center gap-4">
         {/* Role Selector Dropdown */}
         <div className="relative">
-          <button
-            id="role-switch-btn"
-            onClick={() => {
-              setShowRoles(!showRoles);
-              setShowNotifications(false);
-            }}
-            className="flex items-center gap-2 bg-slate-800 hover:bg-slate-700 text-slate-200 px-3 py-1.5 rounded-lg border border-slate-700 transition text-sm font-medium cursor-pointer"
-          >
+          <div className="flex items-center gap-2 bg-slate-800 text-slate-200 px-4 py-2 rounded-lg border border-slate-700 text-sm font-medium">
             <UserCheck className="w-4 h-4 text-emerald-400" />
-            <span>Acting as: </span>
+            <span>Logged in as: </span>
             <strong className="text-emerald-300 capitalize">{currentUser.name} ({currentUser.role})</strong>
-            <ChevronDown className="w-3 h-3 text-slate-400" />
-          </button>
+          </div>
 
-          {showRoles && (
-            <div className="absolute right-0 mt-2 w-64 bg-slate-800 border border-slate-700 rounded-lg shadow-xl z-50 py-1">
-              <div className="px-3 py-1.5 border-b border-slate-700 text-[10px] font-semibold text-slate-400 uppercase tracking-wider">
-                Switch Department Role
-              </div>
-              {users.map(u => (
-                <button
-                  key={u.id}
-                  onClick={() => {
-                    onRoleChange(u.id);
-                    setShowRoles(false);
-                  }}
-                  className={`w-full text-left px-4 py-2 text-xs flex items-center justify-between hover:bg-slate-700 transition cursor-pointer ${
-                    u.id === currentUser.id ? 'bg-slate-700 text-emerald-300 font-medium' : 'text-slate-300'
-                  }`}
-                >
-                  <div className="flex flex-col">
-                    <span>{u.name}</span>
-                    <span className="text-[10px] text-slate-500 capitalize">{u.role}</span>
-                  </div>
-                  {u.id === currentUser.id && <Check className="w-4 h-4 text-emerald-400" />}
-                </button>
-              ))}
-            </div>
-          )}
+          {/* Logout Button */}
+          <button
+            onClick={onLogout}
+            className="flex items-center gap-2 px-3 py-2 bg-slate-800 hover:bg-red-500/10 text-slate-300 hover:text-red-400 rounded-lg border border-slate-700 hover:border-red-500/30 transition-all text-sm font-medium cursor-pointer"
+            title="Sign out"
+          >
+            <span>Log out</span>
+          </button>
         </div>
 
         {/* Notifications Bell */}
@@ -101,7 +73,6 @@ export default function RoleSelector({
             id="notification-bell-btn"
             onClick={() => {
               setShowNotifications(!showNotifications);
-              setShowRoles(false);
             }}
             className="p-2 rounded-full bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-300 hover:text-white transition relative cursor-pointer"
           >
