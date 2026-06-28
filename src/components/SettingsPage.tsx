@@ -44,6 +44,7 @@ export default function SettingsPage({
   // 3. USER MANAGEMENT STATES
   const [newUserName, setNewUserName] = useState('');
   const [newUserEmail, setNewUserEmail] = useState('');
+  const [newUserPassword, setNewUserPassword] = useState('');
   const [newUserRole, setNewUserRole] = useState<UserRole>('sales');
 
   const handleSaveBizInfo = (e: React.FormEvent) => {
@@ -97,8 +98,8 @@ export default function SettingsPage({
 
   const handleCreateUser = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newUserName || !newUserEmail) {
-      alert('User Name and Email are required.');
+    if (!newUserName || !newUserEmail || !newUserPassword) {
+      alert('User Name, Email, and Password are required.');
       return;
     }
 
@@ -106,7 +107,7 @@ export default function SettingsPage({
       id: generateId('u-'),
       name: newUserName,
       email: newUserEmail,
-      password: 'password123',
+      password: newUserPassword,
       role: newUserRole,
       is_active: true,
     };
@@ -116,6 +117,7 @@ export default function SettingsPage({
     
     setNewUserName('');
     setNewUserEmail('');
+    setNewUserPassword('');
   };
 
   const handleToggleUserActive = (id: string) => {
@@ -318,13 +320,22 @@ export default function SettingsPage({
                 onChange={e => setNewUserName(e.target.value)}
                 className="w-full bg-white border border-slate-200 rounded px-2 py-1.5"
               />
-              <input
-                type="email"
-                placeholder="Email address"
-                value={newUserEmail}
-                onChange={e => setNewUserEmail(e.target.value)}
-                className="w-full bg-white border border-slate-200 rounded px-2 py-1.5"
-              />
+              <div className="grid grid-cols-2 gap-2">
+                <input
+                  type="email"
+                  placeholder="Email address"
+                  value={newUserEmail}
+                  onChange={e => setNewUserEmail(e.target.value)}
+                  className="w-full bg-white border border-slate-200 rounded px-2 py-1.5"
+                />
+                <input
+                  type="password"
+                  placeholder="Set Password"
+                  value={newUserPassword}
+                  onChange={e => setNewUserPassword(e.target.value)}
+                  className="w-full bg-white border border-slate-200 rounded px-2 py-1.5"
+                />
+              </div>
               <div className="flex justify-between items-center gap-2">
                 <select
                   value={newUserRole}
