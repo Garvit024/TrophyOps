@@ -58,6 +58,7 @@ export default function NewOrderForm({
   // Overall instructions
   const [designBrief, setDesignBrief] = useState('');
   const [specialInstructions, setSpecialInstructions] = useState('');
+  const [discountPercent, setDiscountPercent] = useState<number>(0);
   const [dragActive, setDragActive] = useState(false);
   const [uploadedMockupUrl, setUploadedMockupUrl] = useState('');
 
@@ -203,6 +204,7 @@ export default function NewOrderForm({
       order_date: orderDate,
       expected_delivery_date: expectedDeliveryDate,
       status: 'received', // initial state
+      discount_percent: discountPercent,
       special_instructions: specialInstructions,
       courier_name: '',
       tracking_number: '',
@@ -571,6 +573,20 @@ export default function NewOrderForm({
             />
           </div>
 
+          {/* DISCOUNT FIELD */}
+          <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm space-y-3 text-xs">
+            <label className="text-[10px] text-slate-400 font-bold uppercase tracking-wider block">Special Client Discount (%)</label>
+            <input
+              type="number"
+              min="0"
+              max="100"
+              value={discountPercent}
+              onChange={e => setDiscountPercent(Number(e.target.value))}
+              placeholder="0"
+              className="w-full sm:w-1/3 bg-slate-50 border border-slate-200 hover:border-slate-300 focus:border-slate-400 rounded-xl p-3 focus:outline-none font-mono"
+            />
+          </div>
+
           {/* FORM SUBMISSION BAR */}
           <div className="flex justify-end gap-3 pt-2">
             <button
@@ -613,7 +629,7 @@ export default function NewOrderForm({
               })}
 
               <div className="border-t border-slate-100 pt-3 flex justify-between font-bold text-slate-800 text-sm">
-                <span>Subtotal Price:</span>
+                <span>Gross Total:</span>
                 <span className="font-mono">
                   ₹{lineItems
                     .filter(i => i.articleId !== '')
@@ -621,6 +637,29 @@ export default function NewOrderForm({
                     .toLocaleString('en-IN')}
                 </span>
               </div>
+              
+              {discountPercent > 0 && (
+                <div className="flex justify-between font-bold text-emerald-600 text-sm">
+                  <span>Discount ({discountPercent}%):</span>
+                  <span className="font-mono">
+                    - ₹{Math.round(lineItems
+                      .filter(i => i.articleId !== '')
+                      .reduce((sum, i) => sum + i.quantity * i.unitPrice, 0) * (discountPercent / 100))
+                      .toLocaleString('en-IN')}
+                  </span>
+                </div>
+              )}
+              
+              <div className="border-t border-slate-100 pt-3 flex justify-between font-bold text-slate-900 text-base">
+                <span>Net Subtotal:</span>
+                <span className="font-mono">
+                  ₹{Math.round(lineItems
+                    .filter(i => i.articleId !== '')
+                    .reduce((sum, i) => sum + i.quantity * i.unitPrice, 0) * (1 - discountPercent / 100))
+                    .toLocaleString('en-IN')}
+                </span>
+              </div>
+
               <p className="text-[10px] text-slate-400 mt-2 leading-relaxed">
                 Billing estimates will apply a customizable 18% B2B GST tax upon invoice preparation at the 'Design Approved' stage.
               </p>

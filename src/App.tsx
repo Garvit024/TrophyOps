@@ -225,8 +225,11 @@ export default function App() {
       return sum + qty * item.unit_price;
     }, 0);
 
+    const discountAmount = Math.round(subtotal * ((order.discount_percent || 0) / 100));
+    const netSubtotal = subtotal - discountAmount;
+
     const gstPercent = 18; // default 18% GST
-    const totalAmount = Math.round(subtotal * 1.18);
+    const totalAmount = Math.round(netSubtotal * 1.18);
 
     const invoiceId = generateId('inv-');
     const invoiceNumber = `INV-${new Date().getFullYear()}-${Math.floor(1000 + Math.random() * 9000)}`;
@@ -237,7 +240,7 @@ export default function App() {
       order_id: orderId,
       generated_by: currentUser?.name || 'System',
       subtotal,
-      discount_amount: 0,
+      discount_amount: discountAmount,
       gst_percent: gstPercent,
       total_amount: totalAmount,
       invoice_date: new Date().toISOString().split('T')[0],

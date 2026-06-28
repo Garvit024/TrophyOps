@@ -60,6 +60,7 @@ export interface Order {
   order_date: string;
   expected_delivery_date: string;
   status: OrderStatus;
+  discount_percent: number;
   special_instructions: string;
   courier_name: string;
   tracking_number: string;
