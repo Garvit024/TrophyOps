@@ -121,13 +121,16 @@ export default function SettingsPage({
   };
 
   const handleToggleUserActive = (id: string) => {
-    const updated = users.map(u => {
+    onUpdateUsers(users.map(u => {
       if (u.id === id) {
+        if (u.role === 'admin') {
+          alert('The primary Admin account cannot be deactivated for security reasons.');
+          return u;
+        }
         return { ...u, is_active: !u.is_active };
       }
       return u;
-    });
-    onUpdateUsers(updated);
+    }));
   };
 
   return (
@@ -366,17 +369,26 @@ export default function SettingsPage({
                     <strong className="font-semibold text-slate-800 block">{u.name}</strong>
                     <span className="text-[10px] text-slate-500 block capitalize">{u.role} • {u.email}</span>
                   </div>
-                  <button
-                    onClick={() => handleToggleUserActive(u.id)}
-                    className="p-1.5 text-slate-400 hover:text-slate-700 rounded transition"
-                    title={u.is_active ? 'Deactivate User' : 'Activate User'}
-                  >
-                    {u.is_active ? (
-                      <ToggleRight className="w-6 h-6 text-emerald-500" />
-                    ) : (
-                      <ToggleLeft className="w-6 h-6 text-slate-300" />
+                  <div className="flex items-center">
+                    {u.role !== 'admin' && (
+                      <button
+                        onClick={() => handleToggleUserActive(u.id)}
+                        className="p-1 hover:bg-slate-100 rounded transition-colors"
+                        title={u.is_active ? "Deactivate User" : "Activate User"}
+                      >
+                        {u.is_active ? (
+                          <ToggleRight className="w-5 h-5 text-emerald-500" />
+                        ) : (
+                          <ToggleLeft className="w-5 h-5 text-slate-400" />
+                        )}
+                      </button>
                     )}
-                  </button>
+                    {u.role === 'admin' && (
+                      <div className="p-1 cursor-not-allowed opacity-50" title="Admin account cannot be deactivated">
+                        <ToggleRight className="w-5 h-5 text-emerald-500" />
+                      </div>
+                    )}
+                  </div>
                 </div>
               ))}
             </div>

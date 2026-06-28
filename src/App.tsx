@@ -66,8 +66,20 @@ export default function App() {
   // Initial Database Load (Firebase or Local fallback)
   useEffect(() => {
     loadDatabase().then(data => {
+      // Security override: Ensure admin is always active
+      let needsSync = false;
+      const adminUser = data.users.find(u => u.role === 'admin');
+      if (adminUser && !adminUser.is_active) {
+        data.users = data.users.map(u => u.role === 'admin' ? { ...u, is_active: true } : u);
+        needsSync = true;
+      }
+
       setDb(data);
       setIsLoading(false);
+
+      if (needsSync) {
+        syncDatabase(data);
+      }
     });
   }, []);
 
