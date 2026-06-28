@@ -5,8 +5,8 @@
 
 import React, { useState, useEffect } from 'react';
 import {
-  getDatabase,
-  saveDatabase,
+  loadDatabase,
+  syncDatabase,
   addOrderLog,
   addNotification,
   handleStatusNotificationTrigger,
@@ -55,55 +55,78 @@ import {
 
 export default function App() {
   // DB State
-  const [db, setDb] = useState(() => getDatabase());
+  const [db, setDb] = useState<DBState | null>(null);
   const [activeTab, setActiveTab] = useState('dashboard');
   const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null);
   const [selectedInvoiceId, setSelectedInvoiceId] = useState<string | null>(null);
   const [ordersFilterStatus, setOrdersFilterStatus] = useState<string>('all');
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
 
-  // Sync state back to local storage whenever DB modifies
+  // Initial Database Load (Firebase or Local fallback)
   useEffect(() => {
-    saveDatabase(db);
+    loadDatabase().then(data => {
+      setDb(data);
+      setIsLoading(false);
+    });
+  }, []);
+
+  // Sync state back to local storage and Firebase whenever DB modifies
+  useEffect(() => {
+    if (db) {
+      syncDatabase(db);
+    }
   }, [db]);
 
   // Current User Helpers
-  const currentUser = db.currentUser;
+  const currentUser = db?.currentUser;
 
   // Handlers
   const handleLogin = (user: User) => {
-    setDb(prev => ({
-      ...prev,
-      currentUser: user,
-    }));
+    setDb(prev => {
+      if (!prev) return prev;
+      return {
+        ...prev,
+        currentUser: user,
+      };
+    });
     setActiveTab('dashboard');
     setSelectedOrderId(null);
     setSelectedInvoiceId(null);
   };
 
   const handleLogout = () => {
-    setDb(prev => ({
-      ...prev,
-      currentUser: null,
-    }));
+    setDb(prev => {
+      if (!prev) return prev;
+      return {
+        ...prev,
+        currentUser: null,
+      };
+    });
     setActiveTab('dashboard');
     setSelectedOrderId(null);
     setSelectedInvoiceId(null);
   };
 
   const handleMarkNotificationRead = (notifId: string) => {
-    setDb(prev => ({
-      ...prev,
-      notifications: prev.notifications.map(n => n.id === notifId ? { ...n, is_read: true } : n),
-    }));
+    setDb(prev => {
+      if (!prev) return prev;
+      return {
+        ...prev,
+        notifications: prev.notifications.map(n => n.id === notifId ? { ...n, is_read: true } : n),
+      };
+    });
   };
 
   const handleClearNotifications = () => {
     if (!currentUser) return;
-    setDb(prev => ({
-      ...prev,
-      notifications: prev.notifications.filter(n => n.recipient_role !== currentUser.role && n.recipient_role !== 'all'),
-    }));
+    setDb(prev => {
+      if (!prev) return prev;
+      return {
+        ...prev,
+        notifications: prev.notifications.filter(n => n.recipient_role !== currentUser.role && n.recipient_role !== 'all'),
+      };
+    });
   };
 
   const handleNavigateToOrder = (orderId: string) => {
@@ -118,22 +141,29 @@ export default function App() {
 
   // Add clients CRM
   const handleAddNewClient = (client: Client) => {
-    setDb(prev => ({
-      ...prev,
-      clients: [client, ...prev.clients],
-    }));
+    setDb(prev => {
+      if (!prev) return prev;
+      return {
+        ...prev,
+        clients: [client, ...prev.clients],
+      };
+    });
   };
 
   // Update Inventory Articles price master list
   const handleUpdateArticles = (updatedArticles: Article[]) => {
-    setDb(prev => ({
-      ...prev,
-      articles: updatedArticles,
-    }));
+    setDb(prev => {
+      if (!prev) return prev;
+      return {
+        ...prev,
+        articles: updatedArticles,
+      };
+    });
   };
 
   // Create Order Workflow (Sales -> Store Notified)
   const handleCreateOrder = (newOrder: Order, items: OrderItem[]) => {
+    if (!db) return;
     let updatedDb = { ...db };
 
     // 1. Insert order and items
@@ -165,6 +195,7 @@ export default function App() {
 
   // Update/Coordinate existing Order transition (Store / Production / Design / Packing / Admin updates)
   const handleUpdateOrder = (updatedOrder: Order, items: OrderItem[], logMsg: string, logAction: string) => {
+    if (!db) return;
     let updatedDb = { ...db };
 
     // 1. Update order status
@@ -214,6 +245,7 @@ export default function App() {
 
   // Auto Generate Invoice (18% B2B Tax)
   const handleGenerateInvoice = (orderId: string) => {
+    if (!db) return;
     const order = db.orders.find(o => o.id === orderId);
     if (!order) return;
 
@@ -268,33 +300,45 @@ export default function App() {
 
   // Add Payment Receipt (partial/full cash, bank transfer, cheque, upi)
   const handleAddPayment = (payment: Payment) => {
-    setDb(prev => ({
-      ...prev,
-      payments: [payment, ...prev.payments],
-    }));
+    setDb(prev => {
+      if (!prev) return prev;
+      return {
+        ...prev,
+        payments: [payment, ...prev.payments],
+      };
+    });
   };
 
   // Update Invoices properties (discount/GST tweaks)
   const handleUpdateInvoice = (updatedInvoice: Invoice) => {
-    setDb(prev => ({
-      ...prev,
-      invoices: prev.invoices.map(inv => inv.id === updatedInvoice.id ? updatedInvoice : inv),
-    }));
+    setDb(prev => {
+      if (!prev) return prev;
+      return {
+        ...prev,
+        invoices: prev.invoices.map(inv => inv.id === updatedInvoice.id ? updatedInvoice : inv),
+      };
+    });
   };
 
   // Update Department Users active states / roles
   const handleUpdateUsers = (updatedUsers: User[]) => {
-    setDb(prev => ({
-      ...prev,
-      users: updatedUsers,
-    }));
+    setDb(prev => {
+      if (!prev) return prev;
+      return {
+        ...prev,
+        users: updatedUsers,
+      };
+    });
   };
 
   const handleUpdateBusinessInfo = (updatedInfo: BusinessInfo) => {
-    setDb(prev => ({
-      ...prev,
-      businessInfo: updatedInfo,
-    }));
+    setDb(prev => {
+      if (!prev) return prev;
+      return {
+        ...prev,
+        businessInfo: updatedInfo,
+      };
+    });
   };
 
   // Tab View Permissions Checker (Department Isolation)
@@ -336,6 +380,15 @@ export default function App() {
     { id: 'reports', label: 'Reports & Analytics', icon: BarChart4, restrict: ['admin'] },
     { id: 'settings', label: 'System Settings', icon: SettingsIcon, restrict: ['admin'] },
   ];
+
+  if (isLoading || !db) {
+    return (
+      <div className="min-h-screen bg-slate-900 flex flex-col justify-center items-center text-emerald-400">
+        <div className="animate-spin text-4xl mb-4" role="img" aria-label="loading">🏆</div>
+        <p className="font-mono tracking-widest text-sm uppercase">Loading TrophyOps System...</p>
+      </div>
+    );
+  }
 
   if (!currentUser) {
     return <LoginPage users={db.users} onLogin={handleLogin} />;

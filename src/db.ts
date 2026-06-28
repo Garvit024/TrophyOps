@@ -17,6 +17,7 @@ import {
   OrderStatus,
   UserRole
 } from './types';
+import { loadDbFromFirebase, saveDbToFirebase, isFirebaseActive } from './firebase';
 
 interface DBState {
   users: User[];
@@ -459,6 +460,27 @@ export function getDatabase(): DBState {
     const fresh = createInitialDB();
     saveDatabase(fresh);
     return fresh;
+  }
+}
+
+/**
+ * Async version of getting database. Tries Firebase first, then falls back to localStorage.
+ */
+export async function loadDatabase(): Promise<DBState> {
+  if (isFirebaseActive()) {
+    const cloudDb = await loadDbFromFirebase();
+    if (cloudDb) return cloudDb;
+  }
+  return getDatabase();
+}
+
+/**
+ * Saves database to local storage and syncs to Firebase if active.
+ */
+export async function syncDatabase(state: DBState) {
+  saveDatabase(state);
+  if (isFirebaseActive()) {
+    await saveDbToFirebase(state);
   }
 }
 
